@@ -1,11 +1,10 @@
-
 name: Build Android APK
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
+
+permissions:
+  contents: read
 
 jobs:
   build:
@@ -28,15 +27,15 @@ jobs:
 
       - name: Extract project
         run: |
-          unzip -q "CodeTesterAndroid.zip" -d project
+          unzip -o CodeTesterAndroid.zip -d extracted
 
       - name: Build APK
         run: |
-          gradle -p project assembleDebug
+          cd extracted
+          gradle assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: CodeTester-debug-apk
-          path: project/app/build/outputs/apk/debug/*.apk
-          if-no-files-found: error
+          name: CodeTester-APK
+          path: extracted/app/build/outputs/apk/debug/*.apk
