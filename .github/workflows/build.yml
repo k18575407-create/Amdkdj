@@ -1,1 +1,43 @@
+name: Build Android APK
 
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Extract project
+        run: |
+          unzip -o CodeTesterAndroid.zip -d extracted
+          find extracted -maxdepth 4 -type f -name gradlew
+
+      - name: Build APK
+        run: |
+          GRADLEW=$(find extracted -type f -name gradlew | head -n 1)
+          if [ -z "$GRADLEW" ]; then
+            echo "Gradle wrapper not found in ZIP"
+            exit 1
+          fi
+          cd "$(dirname "$GRADLEW")"
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: CodeTester-APK
+          path: extracted/**/build/outputs/apk/debug/*.apk
